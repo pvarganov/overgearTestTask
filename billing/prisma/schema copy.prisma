@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://overgear:overgear@postgresql:5432/overgear?schema=overgear"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum TransType {
+  transfer
+  refill
+}
+
+model users {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+  bill  bills?
+
+  @@map("users")
+}
+
+model bills {
+  id        Int            @id @default(autoincrement())
+  userid    Int            @unique
+  balance   Int
+  user      users          @relation(fields: [userid], references: [id])
+  refills   transactions[] @relation("from")
+  writeoffs transactions[] @relation("to")
+}
+
+model transactions {
+  id          Int       @id @default(autoincrement())
+  accountfrom Int
+  accountto   Int
+  from        bills?    @relation("from", fields: [accountfrom], references: [id])
+  to          bills     @relation("to", fields: [accountto], references: [id])
+  type        TransType
+  paymentid   String    @unique
+}
